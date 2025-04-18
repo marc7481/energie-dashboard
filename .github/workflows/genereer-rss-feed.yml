@@ -1,6 +1,7 @@
 name: Genereer RSS feed uit JSON
-
+  
 on:
+  workflow_dispatch: 
   push:
     paths:
       - 'data/meterstanden.json'
