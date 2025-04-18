@@ -1,7 +1,33 @@
-name: Tijdelijk
-on: [push]
+name: Verwerk nieuwe meterstand via JSON
+
+on:
+  push:
+    paths:
+      - 'data/nieuwe-meterstand.json'
+
+permissions:
+  contents: write
+
 jobs:
-  build:
+  update-json:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Tijdelijk"
+      - name: Haal repo op
+        uses: actions/checkout@v3
+
+      - name: Installeer Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Verwerk nieuwe meterstand
+        run: |
+          python3 verwerk_meterstand.py
+
+      - name: Commit en push bijwerkte meterstanden.json
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@users.noreply.github.com"
+          git add data/meterstanden.json
+          git commit -m "Nieuwe meterstand toegevoegd"
+          git push
