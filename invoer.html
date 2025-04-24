@@ -19,11 +19,11 @@
   <label for="zon">Zonne-energie (kWh)</label><br>
   <input type="number" id="zon" required><br><br>
 
-  <button onclick="genereerJSON()">Download JSON-bestand</button>
+  <button onclick="uploadData()">Verzenden</button>
   <p id="status"></p>
 
   <script>
-    function genereerJSON() {
+    async function uploadData() {
       const datum = document.getElementById("datum").value;
       const gas = parseInt(document.getElementById("gas").value);
       const elektra = parseInt(document.getElementById("elektra").value);
@@ -41,17 +41,31 @@
         zonneenergie: zon
       };
 
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "nieuwe-meterstand.json";
-      a.click();
+      try {
+        const response = await fetch("https://api.github.com/repos/marc7481/energie-dashboard/contents/data/nieuwe-meterstand.json", {
+          method: "PUT",
+          headers: {
+            "Authorization": "Bearer x", // <-- vervang 'x' door je geldige token en commit niet openbaar!
+            "Accept": "application/vnd.github+json"
+          },
+          body: JSON.stringify({
+            message: `Nieuwe invoer ${datum}`,
+            content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
+            sha: undefined
+          })
+        });
 
-      document.getElementById("status").innerText = "Bestand gegenereerd. Upload dit in GitHub onder /data.";
+        if (response.ok) {
+          document.getElementById("status").innerText = "Verzonden! De workflow wordt nu gestart.";
+        } else {
+          const error = await response.json();
+          document.getElementById("status").innerText = "Fout bij uploaden: " + error.message;
+        }
+      } catch (err) {
+        document.getElementById("status").innerText = "Fout bij uploaden: " + err.message;
+      }
     }
 
-    // Zet standaarddatum op vandaag
     document.addEventListener("DOMContentLoaded", () => {
       const vandaag = new Date().toISOString().split("T")[0];
       document.getElementById("datum").value = vandaag;
