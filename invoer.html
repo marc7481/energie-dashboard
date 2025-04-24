@@ -3,64 +3,51 @@
 <head>
   <meta charset="UTF-8" />
   <title>Voer je meterstanden in</title>
-  <script src="secrets.js"></script>
 </head>
 <body>
   <h1>Voer je meterstanden in</h1>
-  <label>Datum<br><input type="date" id="datum" /></label><br><br>
-  <label>Gasstand (m³)<br><input type="number" id="gas" /></label><br><br>
-  <label>Elektrastand (kWh)<br><input type="number" id="elektra" /></label><br><br>
-  <label>Zonne-energie (kWh)<br><input type="number" id="zon" /></label><br><br>
-  <button onclick="uploadData()">Verzenden</button>
+
+  <label for="datum">Datum</label>
+  <input type="date" id="datum" required><br><br>
+
+  <label for="gas">Gasstand (m³)</label>
+  <input type="number" id="gas" required><br><br>
+
+  <label for="elektra">Elektrastand (kWh)</label>
+  <input type="number" id="elektra" required><br><br>
+
+  <label for="zon">Zonne-energie (kWh)</label>
+  <input type="number" id="zon" required><br><br>
+
+  <button onclick="genereerJSON()">Verzenden</button>
   <p id="status"></p>
 
   <script>
-    async function uploadData() {
-      const datum = document.getElementById("datum").value;
-      const gas = parseInt(document.getElementById("gas").value);
-      const elektra = parseInt(document.getElementById("elektra").value);
-      const zon = parseInt(document.getElementById("zon").value);
+    function genereerJSON() {
+      const datum = document.getElementById('datum').value;
+      const gas = parseInt(document.getElementById('gas').value);
+      const elektra = parseInt(document.getElementById('elektra').value);
+      const zon = parseInt(document.getElementById('zon').value);
 
-      const json = {
+      if (!datum || isNaN(gas) || isNaN(elektra) || isNaN(zon)) {
+        document.getElementById("status").innerText = "Vul alle velden correct in.";
+        return;
+      }
+
+      const data = {
         datum,
         gas,
         elektra,
         zonneenergie: zon
       };
 
-      const fileContent = JSON.stringify(json, null, 2);
-      const repo = "energie-dashboard";
-      const path = "data/nieuwe-meterstand.json";
-
-      const getUrl = `https://api.github.com/repos/marc7481/${repo}/contents/${path}`;
-      const response = await fetch(getUrl, {
-        headers: {
-          Authorization: `Bearer ${GITHUB_TOKEN}`,
-          Accept: "application/vnd.github.v3+json",
-        },
-      });
-      const data = await response.json();
-      const sha = data.sha;
-
-      const uploadResponse = await fetch(getUrl, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${GITHUB_TOKEN}`,
-          Accept: "application/vnd.github.v3+json",
-        },
-        body: JSON.stringify({
-          message: `Nieuwe meterstand ${datum}`,
-          content: btoa(unescape(encodeURIComponent(fileContent))),
-          sha
-        }),
-      });
-
-      const uploadResult = await uploadResponse.json();
-      if (uploadResponse.ok) {
-        document.getElementById("status").innerText = "Verzonden! Bestand is geüpload.";
-      } else {
-        document.getElementById("status").innerText = `Fout bij uploaden: ${uploadResult.message}`;
-      }
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'nieuwe-meterstand.json';
+      a.click();
+      document.getElementById("status").innerText = "Bestand gegenereerd. Upload dit in GitHub onder /data.";
     }
   </script>
 </body>
