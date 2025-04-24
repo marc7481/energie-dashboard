@@ -1,33 +1,34 @@
-name: Verwerk nieuwe meterstand via JSON
+name: Verwerk nieuwe meterstand
 
 on:
   push:
     paths:
       - 'data/nieuwe-meterstand.json'
 
-permissions:
-  contents: write
-
 jobs:
-  update-json:
+  verwerk:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
     steps:
-      - name: Haal repo op
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Installeer Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
-      - name: Verwerk nieuwe meterstand
-        run: |
-          python3 verwerk_meterstand.py
+      - name: Installeer vereisten (indien nodig)
+        run: pip install -r requirements.txt || echo "Geen requirements nodig"
 
-      - name: Commit en push bijwerkte meterstanden.json
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@users.noreply.github.com"
-          git add data/meterstanden.json
-          git commit -m "Nieuwe meterstand toegevoegd"
-          git push
+      - name: Voer verwerk_meterstand.py uit
+        run: python scripts/verwerk_meterstand.py
+
+      - name: Commit en push gewijzigde bestanden
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: '🧾 Verwerkte nieuwe meterstand en geüpdatet RSS-feed'
+          file_pattern: 'data/meterstanden.json meterstanden-dagelijks.xml'
