@@ -45,7 +45,7 @@
         const response = await fetch("https://api.github.com/repos/marc7481/energie-dashboard/contents/data/nieuwe-meterstand.json", {
           method: "PUT",
           headers: {
-            "Authorization": "Bearer x", // <-- vervang 'x' door je geldige token en commit niet openbaar!
+            "Authorization": "Bearer x", // <-- vul hier handmatig je token in vóór gebruik (eenmalig)
             "Accept": "application/vnd.github+json"
           },
           body: JSON.stringify({
@@ -58,11 +58,11 @@
         if (response.ok) {
           document.getElementById("status").innerText = "Verzonden! De workflow wordt nu gestart.";
         } else {
-          const error = await response.json();
-          document.getElementById("status").innerText = "Fout bij uploaden: " + error.message;
+          const result = await response.json();
+          document.getElementById("status").innerText = "Fout bij uploaden: " + result.message;
         }
       } catch (err) {
-        document.getElementById("status").innerText = "Fout bij uploaden: " + err.message;
+        document.getElementById("status").innerText = "Fout bij uploaden: " + err;
       }
     }
 
