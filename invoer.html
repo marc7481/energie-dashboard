@@ -19,11 +19,11 @@
   <label for="zon">Zonne-energie (kWh)</label><br>
   <input type="number" id="zon" required><br><br>
 
-  <button onclick="uploadData()">Verzenden</button>
+  <button onclick="genereerJSON()">Download JSON-bestand</button>
   <p id="status"></p>
 
   <script>
-    async function uploadData() {
+    function genereerJSON() {
       const datum = document.getElementById("datum").value;
       const gas = parseInt(document.getElementById("gas").value);
       const elektra = parseInt(document.getElementById("elektra").value);
@@ -41,28 +41,14 @@
         zonneenergie: zon
       };
 
-      try {
-        const response = await fetch("https://api.github.com/repos/marc7481/energie-dashboard/contents/data/nieuwe-meterstand.json", {
-          method: "PUT",
-          headers: {
-            "Authorization": "Bearer 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",
-            "Accept": "application/vnd.github+json"
-          },
-          body: JSON.stringify({
-            message: `Nieuwe invoer ${datum}`,
-            content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
-            sha: undefined // wordt automatisch overschreven
-          })
-        });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "nieuwe-meterstand.json";
+      a.click();
 
-        if (response.ok) {
-          document.getElementById("status").innerText = "Verzonden! De workflow wordt nu gestart.";
-        } else {
-          document.getElementById("status").innerText = "Fout bij uploaden: " + (await response.json()).message;
-        }
-      } catch (err) {
-        document.getElementById("status").innerText = "Fout bij uploaden: " + err;
-      }
+      document.getElementById("status").innerText = "Bestand gegenereerd. Upload dit in GitHub onder /data.";
     }
 
     // Zet standaarddatum op vandaag
